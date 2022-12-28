@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System.Text;
+using System;
+using VirtualComIf;
 
 public class egoCar : MonoBehaviour
 {
@@ -46,16 +48,53 @@ public class egoCar : MonoBehaviour
     [SerializeField]
     private GameObject _terrain;
 
+    [SerializeField]
+    private GameObject _virtualComInterfaceGo;
+
+    private float _nextSendMessage;
+    private float _nextReceiveMessage;
+
     // Start is called before the first frame update
     void Start()
     {
         transform.position = new Vector3(0, 0, 0);
+        _nextSendMessage = Time.time + 0.01f ;
+        _nextReceiveMessage = Time.time + 0.1f;
         
+
     }
 
     // Update is called once per frame
     void Update()
-    {        
+    {
+      VirtualComInterface _virtualComInterfaceComponent = _virtualComInterfaceGo.GetComponent<VirtualComInterface>();
+        if (_virtualComInterfaceComponent == null)
+        {
+            Debug.Log("_virtualComInterfaceComponent == null");
+        }
+        else
+        {
+            if (Time.time > _nextSendMessage)
+            {
+                _virtualComInterfaceComponent.SendMessage( Encoding.ASCII.GetBytes("Speed: 5.0 km/h"));
+                _nextSendMessage = Time.time + 1.0f;
+            }
+
+            if (Time.time > _nextReceiveMessage)
+            {
+                //ReceiveStateEnum receiveState = ReceiveStateEnum.INIT;                
+                _nextReceiveMessage = Time.time + 0.1f;
+                
+                //receiveState = _virtualComInterfaceComponent.ReceiveMessageAsync();
+                
+            }
+
+
+        }
+
+    
+
+        //_virtualComInterfaceComponent.DebugOut();
         GetInputs();
         UpdatePosition();
         UpdateEgoAngle();
@@ -112,7 +151,7 @@ public class egoCar : MonoBehaviour
         Terrain _terrain;
         _terrain = Terrain.activeTerrain;
 
-        Debug.Log("Terrain size z:= " + _terrain.terrainData.size.z + ", position z := " + transform.position.z);
+        //Debug.Log("Terrain size z:= " + _terrain.terrainData.size.z + ", position z := " + transform.position.z);
 
         if (transform.position.x + 20 > _terrain.terrainData.size.x / 2)
         {
