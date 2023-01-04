@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
 using System;
-using VirtualComIf;
+using SocketInterfaceNameSpace;
 
 public class egoCar : MonoBehaviour
 {
@@ -49,7 +49,10 @@ public class egoCar : MonoBehaviour
     private GameObject _terrain;
 
     [SerializeField]
-    private GameObject _virtualComInterfaceGo;
+    private GameObject _SocketInterfaceGameObject;
+
+    [SerializeField]
+    private GameObject _CanBusInterfaceGameObject;
 
     private float _nextSendMessage;
     private float _nextReceiveMessage;
@@ -58,17 +61,16 @@ public class egoCar : MonoBehaviour
     void Start()
     {
         transform.position = new Vector3(0, 0, 0);
-        _nextSendMessage = Time.time + 0.01f ;
-        _nextReceiveMessage = Time.time + 0.1f;
-        
-
+        _nextSendMessage = Time.time + 1.0f ;              
     }
 
     // Update is called once per frame
     void Update()
     {
-      VirtualComInterface _virtualComInterfaceComponent = _virtualComInterfaceGo.GetComponent<VirtualComInterface>();
-        if (_virtualComInterfaceComponent == null)
+      SocketInterface _SocketInterfaceComponent = _SocketInterfaceGameObject.GetComponent<SocketInterface>();
+      CanBusInterfaceClass _CanBusInterfaceClass = _CanBusInterfaceGameObject.GetComponent<CanBusInterfaceClass>();
+        
+        if (_SocketInterfaceComponent == null)
         {
             Debug.Log("_virtualComInterfaceComponent == null");
         }
@@ -76,23 +78,26 @@ public class egoCar : MonoBehaviour
         {
             if (Time.time > _nextSendMessage)
             {
-                _virtualComInterfaceComponent.SendMessage( Encoding.ASCII.GetBytes("Speed: 5.0 km/h"));
-                _nextSendMessage = Time.time + 1.0f;
+                _SocketInterfaceComponent.SendMessage( Encoding.ASCII.GetBytes("Speed: 5.0 km/h"));
             }
-
-            if (Time.time > _nextReceiveMessage)
-            {
-                //ReceiveStateEnum receiveState = ReceiveStateEnum.INIT;                
-                _nextReceiveMessage = Time.time + 0.1f;
-                
-                //receiveState = _virtualComInterfaceComponent.ReceiveMessageAsync();
-                
-            }
-
-
+        }
+        if (_CanBusInterfaceClass == null)
+        {
+            Debug.Log("No CAN bus interface connected");
+        }
+        else
+        {
+            //SendSpeed to CAN ID 0x700 (serialize float to an integer value with msb first)
+            int ego_speed_int = (int)Math.Round(_ego_speed_meter_per_s * 10);
+            byte upper = (byte)(ego_speed_int >> 8);
+            byte lower = (byte)(ego_speed_int & 0xff);            
+            _CanBusInterfaceClass.SendCanMessage(0x700, new byte[] { upper, lower}, 2);
         }
 
-    
+        if (Time.time > _nextSendMessage)
+        {            
+            _nextSendMessage = Time.time + 1.0f;
+        }
 
         //_virtualComInterfaceComponent.DebugOut();
         GetInputs();
@@ -137,14 +142,14 @@ public class egoCar : MonoBehaviour
     {
         if (_input_steering_wheel_enable == 1)
         {
-            _rotation_y += _input_x_axis * _steering_factor;
+            _rotation_y += _input_x_axis * _steering_factor * _ego_speed_meter_per_s;
         }
         
         transform.eulerAngles = new Vector3(0, _rotation_y, 0);
-        _wheel_fl.transform.eulerAngles = new Vector3(_wheel_fl.transform.eulerAngles.x, _rotation_y, 0);
-        _wheel_fr.transform.eulerAngles = new Vector3(_wheel_fl.transform.eulerAngles.x, _rotation_y, 0);
-        _wheel_rl.transform.eulerAngles = new Vector3(_wheel_fl.transform.eulerAngles.x, _rotation_y, 0);
-        _wheel_rr.transform.eulerAngles = new Vector3(_wheel_fl.transform.eulerAngles.x, _rotation_y, 0);
+        //_wheel_fl.transform.eulerAngles = new Vector3(_wheel_fl.transform.eulerAngles.x, _rotation_y, 0);
+        //_wheel_fr.transform.eulerAngles = new Vector3(_wheel_fr.transform.eulerAngles.x, _rotation_y, 0);
+        //_wheel_rl.transform.eulerAngles = new Vector3(_wheel_rl.transform.eulerAngles.x, _rotation_y, 0);
+        //_wheel_rr.transform.eulerAngles = new Vector3(_wheel_rr.transform.eulerAngles.x, _rotation_y, 0);
     }
     private void LimitTerrain()
     {

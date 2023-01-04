@@ -8,11 +8,11 @@ using System.IO;
 using System;
 using System.ComponentModel;
 
-namespace VirtualComIf
+namespace SocketInterfaceNameSpace
 {
     public enum ReceiveStateEnum { IDLE, RECEIVING, RECEIVED };
 
-    public class VirtualComInterface : MonoBehaviour
+    public class SocketInterface : MonoBehaviour
     {
         BackgroundWorker _WorkerReceive;
                 
@@ -89,7 +89,7 @@ namespace VirtualComIf
             len = s.ReceiveFrom(ReceiveMessageBuffer, SocketFlags.None, ref receiveEP);
             s.Close();            
             _receiveState = ReceiveStateEnum.RECEIVED;
-            e.Cancel = true;
+            //e.Cancel = true;
             
         }
 

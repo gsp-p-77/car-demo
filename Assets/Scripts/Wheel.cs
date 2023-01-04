@@ -30,7 +30,7 @@ public class Wheel : MonoBehaviour
     {        
         _rotation_x += _ego_car.GetComponent<egoCar>().GetSpeed() * _rotation_factor;
         Mathf.Clamp(_rotation_x, -360, 360);        
-        transform.eulerAngles = new Vector3(_rotation_x, 0, 0);
+        transform.eulerAngles = new Vector3(_rotation_x, transform.eulerAngles.y, transform.eulerAngles.z);
     }
     void ForwardCarSpeed(float speed)
     {
