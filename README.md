@@ -1,2 +1,2 @@
 # car-demo
-Simulation of a car driving in a simple terrain build for Unity platform
+Unity project to simulate a car, which can move in a simple terrain with communication interfaces to Vector CAN devices
